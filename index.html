@@ -4,63 +4,241 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approvisionnement Delta Nord Afrique</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; padding: 20px; 
-            background: #f5f5f5; 
-        }
-        .container { 
-            max-width: 900px; 
-            margin: auto; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 { color: #1e3a8a; text-align: center; }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: left; 
-        }
-        th { background-color: #1e3a8a; color: white; }
-        .btn { 
-            background: #2563eb; 
-            color: white; 
-            padding: 10px 20px; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+       .container { max-width: 1400px; margin: auto; }
+        h1 { color: #1e3a8a; text-align: center; margin-bottom: 10px; }
+       .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+
+        /* KPI Cards */
+       .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+       .kpi-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+       .kpi-card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+       .kpi-card.value { font-size: 32px; font-weight: bold; color: #1e3a8a; }
+       .kpi-card.alert { border-left: 5px solid #dc2626; }
+       .kpi-card.alert.value { color: #dc2626; }
+
+        /* Tabs */
+       .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+       .tab { padding: 12px 24px; background: white; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; }
+       .tab.active { background: #1e3a8a; color: white; }
+
+        /* Table */
+       .table-wrapper { background: white; padding: 20px; border-radius: 0 10px 10px 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+       .toolbar { display: flex; justify-content: space-between; margin-bottom: 15px; }
+       .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+       .btn-primary { background: #2563eb; color: white; }
+       .btn-success { background: #16a34a; color: white; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1e3a8a; color: white; padding: 12px; text-align: left; font-size: 14px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background: #f9fafb; }
+       .status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+       .status-ok { background: #dcfce7; color: #166534; }
+       .status-warning { background: #fef3c7; color: #92400e; }
+       .status-danger { background: #fee2e2; color: #991b1b; }
+        input[type="file"] { display: none; }
+       .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Approvisionnement Delta Nord Afrique</h1>
-        <p>Gestion des stocks et commandes</p>
-        
-        <button class="btn">Ajouter un produit</button>
-        
-        <table>
-            <tr>
-                <th>Produit</th>
-                <th>Quantité</th>
-                <th>Fournisseur</th>
-                <th>Statut</th>
-            </tr>
-            <tr>
-                <td>Exemple: Câble réseau</td>
-                <td>50</td>
-                <td>Delta Maroc</td>
-                <td>En stock</td>
-            </tr>
-        </table>
+        <p class="subtitle">Gestion Stock MP & Consommables + Alertes Rupture</p>
+
+        <!-- KPI Dashboard -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <h3>VALEUR STOCK MP</h3>
+                <div class="value" id="kpi-mp">0 DH</div>
+            </div>
+            <div class="kpi-card">
+                <h3>VALEUR STOCK C</h3>
+                <div class="kpi-card value" id="kpi-c">0 DH</div>
+            </div>
+            <div class="kpi-card alert">
+                <h3>RÉFÉRENCES EN RUPTURE</h3>
+                <div class="value" id="kpi-rupture">0</div>
+            </div>
+            <div class="kpi-card">
+                <h3>FOURNISSEURS ACTIFS</h3>
+                <div class="value" id="kpi-fournisseurs">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('mp')">Matières Premières MP</button>
+            <button class="tab" onclick="switchTab('c')">Consommables C</button>
+            <button class="tab" onclick="switchTab('fournisseurs')">Fournisseurs</button>
+        </div>
+
+        <!-- Tables -->
+        <div class="table-wrapper">
+            <div class="toolbar">
+                <div>
+                    <label for="excel-file" class="btn btn-success">📊 Importer Excel</label>
+                    <input type="file" id="excel-file" accept=".xlsx,.xls,.csv">
+                    <button class="btn btn-primary" onclick="addRow()">➕ Ajouter Ligne</button>
+                </div>
+                <button class="btn btn-primary" onclick="exportCSV()">💾 Export CSV</button>
+            </div>
+
+            <div id="table-mp">
+                <table id="mp-table"></table>
+            </div>
+            <div id="table-c" class="hidden">
+                <table id="c-table"></table>
+            </div>
+            <div id="table-fournisseurs" class="hidden">
+                <table id="fournisseurs-table"></table>
+            </div>
+        </div>
     </div>
+
+    <script>
+        let data = { mp: [], c: [], fournisseurs: [] };
+        let currentTab = 'mp';
+
+        // Load from localStorage
+        if(localStorage.getItem('approData')) {
+            data = JSON.parse(localStorage.getItem('approData'));
+        }
+
+        function saveData() {
+            localStorage.setItem('approData', JSON.stringify(data));
+            updateKPI();
+            renderTable();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('table-mp').classList.add('hidden');
+            document.getElementById('table-c').classList.add('hidden');
+            document.getElementById('table-fournisseurs').classList.add('hidden');
+            document.getElementById('table-' + tab).classList.remove('hidden');
+            renderTable();
+        }
+
+        function renderTable() {
+            const headers = {
+                mp: ['Réf', 'Désignation', 'Stock', 'Stock Min', 'Prix Unit', 'Fournisseur', 'Statut', 'Actions'],
+                c: ['Réf', 'Désignation', 'Stock', 'Stock Min', 'Prix Unit', 'Fournisseur', 'Statut', 'Actions'],
+                fournisseurs: ['Nom', 'Délai (j)', 'Nb Réfs', 'Note', 'Actions']
+            };
+
+            let html = '<tr>' + headers[currentTab].map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+            data[currentTab].forEach((row, i) => {
+                if(currentTab === 'fournisseurs') {
+                    html += `<tr>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'nom', this.innerText)">${row.nom||''}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'delai', this.innerText)">${row.delai||''}</td>
+                        <td>${row.nbrefs||0}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'note', this.innerText)">${row.note||''}</td>
+                        <td><button onclick="deleteRow('${currentTab}', ${i})">🗑️</button></td>
+                    </tr>`;
+                } else {
+                    const stock = parseFloat(row.stock)||0;
+                    const min = parseFloat(row.stockMin)||0;
+                    let status = 'status-ok', text = 'OK';
+                    if(stock === 0) { status = 'status-danger'; text = 'RUPTURE'; }
+                    else if(stock <= min) { status = 'status-danger'; text = 'CRITIQUE'; }
+                    else if(stock <= min*1.5) { status = 'status-warning'; text = 'BAS'; }
+
+                    html += `<tr>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'ref', this.innerText)">${row.ref||''}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'des', this.innerText)">${row.des||''}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'stock', this.innerText)">${row.stock||0}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'stockMin', this.innerText)">${row.stockMin||0}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'prix', this.innerText)">${row.prix||0}</td>
+                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'fournisseur', this.innerText)">${row.fournisseur||''}</td>
+                        <td><span class="status ${status}">${text}</span></td>
+                        <td><button onclick="deleteRow('${currentTab}', ${i})">🗑️</button></td>
+                    </tr>`;
+                }
+            });
+
+            document.getElementById(currentTab + '-table').innerHTML = html;
+        }
+
+        function updateCell(tab, i, field, value) {
+            data[tab][i][field] = value;
+            saveData();
+        }
+
+        function addRow() {
+            if(currentTab === 'fournisseurs') {
+                data[currentTab].push({nom:'', delai:'', nbrefs:0, note:''});
+            } else {
+                data[currentTab].push({ref:'', des:'', stock:0, stockMin:0, prix:0, fournisseur:''});
+            }
+            saveData();
+        }
+
+        function deleteRow(tab, i) {
+            data[tab].splice(i, 1);
+            saveData();
+        }
+
+        function updateKPI() {
+            const valMP = data.mp.reduce((sum, r) => sum + (parseFloat(r.stock)||0) * (parseFloat(r.prix)||0), 0);
+            const valC = data.c.reduce((sum, r) => sum + (parseFloat(r.stock)||0) * (parseFloat(r.prix)||0), 0);
+            const rupture = [...data.mp,...data.c].filter(r => (parseFloat(r.stock)||0) <= (parseFloat(r.stockMin)||0)).length;
+            const fournisseurs = new Set([...data.mp,...data.c].map(r => r.fournisseur).filter(f => f)).size;
+
+            document.getElementById('kpi-mp').innerText = valMP.toLocaleString() + ' DH';
+            document.getElementById('kpi-c').innerText = valC.toLocaleString() + ' DH';
+            document.getElementById('kpi-rupture').innerText = rupture;
+            document.getElementById('kpi-fournisseurs').innerText = fournisseurs;
+        }
+
+        // Import Excel
+        document.getElementById('excel-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const bstr = evt.target.result;
+                const wb = XLSX.read(bstr, {type:'binary'});
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(ws);
+
+                // Assume colonnes: Ref, Désignation, Stock, StockMin, Prix, Fournisseur, Type(MP/C)
+                json.forEach(row => {
+                    const type = (row.Type||'mp').toLowerCase();
+                    const obj = {
+                        ref: row.Ref||row.Réf||'',
+                        des: row.Désignation||row.Designation||'',
+                        stock: row.Stock||0,
+                        stockMin: row.StockMin||row['Stock Min']||0,
+                        prix: row.Prix||row['Prix Unit']||0,
+                        fournisseur: row.Fournisseur||''
+                    };
+                    if(type === 'c') data.c.push(obj); else data.mp.push(obj);
+                });
+                saveData();
+                alert('Import réussi! ' + json.length + ' lignes ajoutées');
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        function exportCSV() {
+            const rows = data[currentTab];
+            let csv = Object.keys(rows[0]||{}).join(',') + '\n';
+            rows.forEach(r => { csv += Object.values(r).join(',') + '\n'; });
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = currentTab + '_export.csv'; a.click();
+        }
+
+        // Init
+        renderTable();
+        updateKPI();
+    </script>
 </body>
 </html>
