@@ -3,242 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Approvisionnement Delta Nord Afrique</title>
+    <title>MRP Delta Nord Afrique - SOMACA</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
-       .container { max-width: 1400px; margin: auto; }
-        h1 { color: #1e3a8a; text-align: center; margin-bottom: 10px; }
-       .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+     .container { max-width: 1800px; margin: auto; }
+        h1 { color: #1e3a8a; text-align: center; margin-bottom: 8px; }
+     .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
 
-        /* KPI Cards */
-       .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-       .kpi-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-       .kpi-card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
-       .kpi-card.value { font-size: 32px; font-weight: bold; color: #1e3a8a; }
-       .kpi-card.alert { border-left: 5px solid #dc2626; }
-       .kpi-card.alert.value { color: #dc2626; }
+     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+     .kpi-card { background: white; padding: 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+     .kpi-card h3 { font-size: 11px; color: #666; margin-bottom: 6px; text-transform: uppercase; }
+     .kpi-card.value { font-size: 24px; font-weight: bold; color: #1e3a8a; }
+     .kpi-card.alert { border-left: 4px solid #dc2626; }
+     .kpi-card.alert.value { color: #dc2626; }
 
-        /* Tabs */
-       .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-       .tab { padding: 12px 24px; background: white; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; }
-       .tab.active { background: #1e3a8a; color: white; }
+     .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+     .tab { padding: 10px 18px; background: white; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; font-size: 14px; }
+     .tab.active { background: #1e3a8a; color: white; }
 
-        /* Table */
-       .table-wrapper { background: white; padding: 20px; border-radius: 0 10px 10px 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-       .toolbar { display: flex; justify-content: space-between; margin-bottom: 15px; }
-       .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-       .btn-primary { background: #2563eb; color: white; }
-       .btn-success { background: #16a34a; color: white; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #1e3a8a; color: white; padding: 12px; text-align: left; font-size: 14px; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+     .table-wrapper { background: white; padding: 18px; border-radius: 0 10px 10px 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+     .toolbar { display: flex; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+     .btn { padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+     .btn-primary { background: #2563eb; color: white; }
+     .btn-success { background: #16a34a; color: white; }
+     .btn-warning { background: #f59e0b; color: white; }
+     .btn-danger { background: #dc2626; color: white; }
+
+     .scroll { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #1e3a8a; color: white; padding: 8px; text-align: left; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        td { padding: 6px 8px; border-bottom: 1px solid #eee; white-space: nowrap; }
         tr:hover { background: #f9fafb; }
-       .status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-       .status-ok { background: #dcfce7; color: #166534; }
-       .status-warning { background: #fef3c7; color: #92400e; }
-       .status-danger { background: #fee2e2; color: #991b1b; }
+     .status { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+     .status-ok { background: #dcfce7; color: #166534; }
+     .status-warning { background: #fef3c7; color: #92400e; }
+     .status-danger { background: #fee2e2; color: #991b1b; }
         input[type="file"] { display: none; }
-       .hidden { display: none; }
+     .hidden { display: none; }
+     .alert-box { background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+     .success-box { background: #dcfce7; border: 1px solid #16a34a; color: #166534; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+     .stock-input { width: 80px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; text-align: right; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Approvisionnement Delta Nord Afrique</h1>
-        <p class="subtitle">Gestion Stock MP & Consommables + Alertes Rupture</p>
+        <h1>MRP Delta Nord Afrique - SOMACA</h1>
+        <p class="subtitle">Forecast PF → Explosion BOM → Calcul Besoin MP/C → Plan Rupture</p>
 
-        <!-- KPI Dashboard -->
+        <div id="alert-zone"></div>
+
         <div class="kpi-grid">
             <div class="kpi-card">
-                <h3>VALEUR STOCK MP</h3>
-                <div class="value" id="kpi-mp">0 DH</div>
+                <h3>Semaines Forecast</h3>
+                <div class="value" id="kpi-semaines">0</div>
             </div>
             <div class="kpi-card">
-                <h3>VALEUR STOCK C</h3>
-                <div class="kpi-card value" id="kpi-c">0 DH</div>
+                <h3>NB PF Actifs</h3>
+                <div class="value" id="kpi-pf">0</div>
+            </div>
+            <div class="kpi-card">
+                <h3>NB Réf MP/C</h3>
+                <div class="value" id="kpi-mp">0</div>
             </div>
             <div class="kpi-card alert">
-                <h3>RÉFÉRENCES EN RUPTURE</h3>
+                <h3>Ruptures < 2 Sem</h3>
                 <div class="value" id="kpi-rupture">0</div>
             </div>
-            <div class="kpi-card">
-                <h3>FOURNISSEURS ACTIFS</h3>
-                <div class="value" id="kpi-fournisseurs">0</div>
+            <div class="kpi-card alert">
+                <h3>Val À Commander</h3>
+                <div class="value" id="kpi-cmd">0 DH</div>
             </div>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('mp')">Matières Premières MP</button>
-            <button class="tab" onclick="switchTab('c')">Consommables C</button>
-            <button class="tab" onclick="switchTab('fournisseurs')">Fournisseurs</button>
+            <button class="tab active" onclick="switchTab('besoin')">📦 Besoin MP/C</button>
+            <button class="tab" onclick="switchTab('rupture')">⚠️ Plan Rupture</button>
+            <button class="tab" onclick="switchTab('forecast')">📊 Forecast PF</button>
+            <button class="tab" onclick="switchTab('bom')">📋 BOM</button>
         </div>
 
-        <!-- Tables -->
         <div class="table-wrapper">
             <div class="toolbar">
                 <div>
-                    <label for="excel-file" class="btn btn-success">📊 Importer Excel</label>
-                    <input type="file" id="excel-file" accept=".xlsx,.xls,.csv">
-                    <button class="btn btn-primary" onclick="addRow()">➕ Ajouter Ligne</button>
+                    <label for="file-forecast" class="btn btn-success">📊 1. Import Forecast SOMACA</label>
+                    <input type="file" id="file-forecast" accept=".xlsx,.xls,.csv">
+                    <label for="file-bom" class="btn btn-warning">📋 2. Import BOM</label>
+                    <input type="file" id="file-bom" accept=".xlsx,.xls,.csv">
+                    <button class="btn btn-primary" onclick="calculerMRP()">⚡ 3. Calculer MRP</button>
                 </div>
-                <button class="btn btn-primary" onclick="exportCSV()">💾 Export CSV</button>
+                <div>
+                    <button class="btn btn-primary" onclick="exportExcel()">💾 Export</button>
+                    <button class="btn btn-danger" onclick="clearAll()">🗑️ Reset</button>
+                </div>
             </div>
 
-            <div id="table-mp">
-                <table id="mp-table"></table>
-            </div>
-            <div id="table-c" class="hidden">
-                <table id="c-table"></table>
-            </div>
-            <div id="table-fournisseurs" class="hidden">
-                <table id="fournisseurs-table"></table>
-            </div>
+            <div id="table-besoin" class="scroll"><table id="besoin-table"></table></div>
+            <div id="table-rupture" class="hidden scroll"><table id="rupture-table"></table></div>
+            <div id="table-forecast" class="hidden scroll"><table id="forecast-table"></table></div>
+            <div id="table-bom" class="hidden scroll"><table id="bom-table"></table></div>
         </div>
     </div>
 
     <script>
-        let data = { mp: [], c: [], fournisseurs: [] };
-        let currentTab = 'mp';
+        let forecastPF = [];
+        let bom = [];
+        let besoinMP = {};
+        let semaines = [];
+        let currentTab = 'besoin';
 
         // Load from localStorage
-        if(localStorage.getItem('approData')) {
-            data = JSON.parse(localStorage.getItem('approData'));
+        const saved = localStorage.getItem('mrpDeltaData');
+        if(saved) {
+            const d = JSON.parse(saved);
+            forecastPF = d.forecastPF || [];
+            bom = d.bom || [];
+            besoinMP = d.besoinMP || {};
+            semaines = d.semaines || [];
+            if(forecastPF.length > 0) renderAll();
         }
 
         function saveData() {
-            localStorage.setItem('approData', JSON.stringify(data));
-            updateKPI();
-            renderTable();
+            localStorage.setItem('mrpDeltaData', JSON.stringify({forecastPF, bom, besoinMP, semaines}));
         }
 
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById('table-mp').classList.add('hidden');
-            document.getElementById('table-c').classList.add('hidden');
-            document.getElementById('table-fournisseurs').classList.add('hidden');
+            ['besoin','rupture','forecast','bom'].forEach(t => document.getElementById('table-'+t).classList.add('hidden'));
             document.getElementById('table-' + tab).classList.remove('hidden');
             renderTable();
         }
 
-        function renderTable() {
-            const headers = {
-                mp: ['Réf', 'Désignation', 'Stock', 'Stock Min', 'Prix Unit', 'Fournisseur', 'Statut', 'Actions'],
-                c: ['Réf', 'Désignation', 'Stock', 'Stock Min', 'Prix Unit', 'Fournisseur', 'Statut', 'Actions'],
-                fournisseurs: ['Nom', 'Délai (j)', 'Nb Réfs', 'Note', 'Actions']
-            };
-
-            let html = '<tr>' + headers[currentTab].map(h => `<th>${h}</th>`).join('') + '</tr>';
-
-            data[currentTab].forEach((row, i) => {
-                if(currentTab === 'fournisseurs') {
-                    html += `<tr>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'nom', this.innerText)">${row.nom||''}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'delai', this.innerText)">${row.delai||''}</td>
-                        <td>${row.nbrefs||0}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'note', this.innerText)">${row.note||''}</td>
-                        <td><button onclick="deleteRow('${currentTab}', ${i})">🗑️</button></td>
-                    </tr>`;
-                } else {
-                    const stock = parseFloat(row.stock)||0;
-                    const min = parseFloat(row.stockMin)||0;
-                    let status = 'status-ok', text = 'OK';
-                    if(stock === 0) { status = 'status-danger'; text = 'RUPTURE'; }
-                    else if(stock <= min) { status = 'status-danger'; text = 'CRITIQUE'; }
-                    else if(stock <= min*1.5) { status = 'status-warning'; text = 'BAS'; }
-
-                    html += `<tr>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'ref', this.innerText)">${row.ref||''}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'des', this.innerText)">${row.des||''}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'stock', this.innerText)">${row.stock||0}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'stockMin', this.innerText)">${row.stockMin||0}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'prix', this.innerText)">${row.prix||0}</td>
-                        <td contenteditable onblur="updateCell('${currentTab}', ${i}, 'fournisseur', this.innerText)">${row.fournisseur||''}</td>
-                        <td><span class="status ${status}">${text}</span></td>
-                        <td><button onclick="deleteRow('${currentTab}', ${i})">🗑️</button></td>
-                    </tr>`;
-                }
-            });
-
-            document.getElementById(currentTab + '-table').innerHTML = html;
-        }
-
-        function updateCell(tab, i, field, value) {
-            data[tab][i][field] = value;
-            saveData();
-        }
-
-        function addRow() {
-            if(currentTab === 'fournisseurs') {
-                data[currentTab].push({nom:'', delai:'', nbrefs:0, note:''});
-            } else {
-                data[currentTab].push({ref:'', des:'', stock:0, stockMin:0, prix:0, fournisseur:''});
-            }
-            saveData();
-        }
-
-        function deleteRow(tab, i) {
-            data[tab].splice(i, 1);
-            saveData();
-        }
-
-        function updateKPI() {
-            const valMP = data.mp.reduce((sum, r) => sum + (parseFloat(r.stock)||0) * (parseFloat(r.prix)||0), 0);
-            const valC = data.c.reduce((sum, r) => sum + (parseFloat(r.stock)||0) * (parseFloat(r.prix)||0), 0);
-            const rupture = [...data.mp,...data.c].filter(r => (parseFloat(r.stock)||0) <= (parseFloat(r.stockMin)||0)).length;
-            const fournisseurs = new Set([...data.mp,...data.c].map(r => r.fournisseur).filter(f => f)).size;
-
-            document.getElementById('kpi-mp').innerText = valMP.toLocaleString() + ' DH';
-            document.getElementById('kpi-c').innerText = valC.toLocaleString() + ' DH';
-            document.getElementById('kpi-rupture').innerText = rupture;
-            document.getElementById('kpi-fournisseurs').innerText = fournisseurs;
-        }
-
-        // Import Excel
-        document.getElementById('excel-file').addEventListener('change', (e) => {
+        // Import Forecast - skip 2 header rows
+        document.getElementById('file-forecast').addEventListener('change', (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (evt) => {
-                const bstr = evt.target.result;
-                const wb = XLSX.read(bstr, {type:'binary'});
-                const ws = wb.Sheets[wb.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(ws);
+                const wb = XLSX.read(evt.target.result, {type:'binary'});
+                const ws = wb.Sheets['SOMACA'];
+                const json = XLSX.utils.sheet_to_json(ws, {header: 1});
 
-                // Assume colonnes: Ref, Désignation, Stock, StockMin, Prix, Fournisseur, Type(MP/C)
-                json.forEach(row => {
-                    const type = (row.Type||'mp').toLowerCase();
-                    const obj = {
-                        ref: row.Ref||row.Réf||'',
-                        des: row.Désignation||row.Designation||'',
-                        stock: row.Stock||0,
-                        stockMin: row.StockMin||row['Stock Min']||0,
-                        prix: row.Prix||row['Prix Unit']||0,
-                        fournisseur: row.Fournisseur||''
-                    };
-                    if(type === 'c') data.c.push(obj); else data.mp.push(obj);
-                });
+                // Row 2 = headers: Étiquettes de lignes, 2026S05, 2026S06...
+                const headers = json[2];
+                semaines = headers.slice(1).filter(h => h && h.toString().match(/202\dS\d+/));
+
+                // Rows 3+ = data
+                forecastPF = [];
+                for(let i = 3; i < json.length; i++) {
+                    const row = json[i];
+                    if(!row[0] || row[0] === 'Total général') continue;
+                    const obj = { 'Reference PF': row[0] };
+                    semaines.forEach((s, idx) => {
+                        obj[s] = parseFloat(row[idx + 1]) || 0;
+                    });
+                    forecastPF.push(obj);
+                }
+
+                showAlert(`✅ Forecast importé: ${forecastPF.length} PF, ${semaines.length} semaines`, 'success');
+                renderAll();
                 saveData();
-                alert('Import réussi! ' + json.length + ' lignes ajoutées');
             };
             reader.readAsBinaryString(file);
         });
 
-        function exportCSV() {
-            const rows = data[currentTab];
-            let csv = Object.keys(rows[0]||{}).join(',') + '\n';
-            rows.forEach(r => { csv += Object.values(r).join(',') + '\n'; });
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = currentTab + '_export.csv'; a.click();
+        // Import BOM
+        document.getElementById('file-bom').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const wb = XLSX.read(evt.target.result, {type:'binary'});
+                const ws = wb.Sheets['consumation MP et C'];
+                bom = XLSX.utils.sheet_to_json(ws);
+                showAlert(`✅ BOM importée: ${bom.length} lignes`, 'success');
+                renderAll();
+                saveData();
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        // Calcul MRP Principal
+        function calculerMRP() {
+            if(forecastPF.length === 0 || bom.length === 0) {
+                showAlert('⚠️ Import Forecast + BOM lowel!', 'alert');
+                return;
+            }
+
+            besoinMP = {};
+
+            // 1. Explosion BOM: PF x Qté = Besoin MP
+            forecastPF.forEach(pf => {
+                const pfRef = pf['Reference PF'].toString().trim();
+
+                const lignesBOM = bom.filter(b => (b['Reference ']||'').toString().trim() === pfRef);
+
+                lignesBOM.forEach(ligne => {
+                    const refMP = (ligne['composant ']||'').toString().trim();
+                    const qte = parseFloat(ligne['Quantité']) || 0;
+
+                    if(!refMP) return;
+
+                    if(!besoinMP[refMP]) {
+                        besoinMP[refMP] = {
+                            ref: refMP,
+                            des: ligne['Type Composant'] || '',
+                            type: ligne['Type '] || 'MP',
+                            unite: ligne['Unité'] || '',
+                            stock: 0,
+                            stockMin: 0,
+                            prix: 0,
+                            fournisseur: '',
+                            besoin: {},
+                            conso_moy: 0,
+                            couverture: 999,
+                            a_commander: 0,
+                            valeur_cmd: 0,
+                            statut: 'OK'
+                        };
+                        semaines.forEach(s => besoinMP[refMP].besoin[s] = 0);
+                    }
+
+                    // Calcul besoin par semaine
+                    semaines.forEach(s => {
+                        const besoinPF = parseFloat(pf[s]) || 0;
+                        besoinMP[refMP].besoin[s] += besoinPF * qte;
+                    });
+                });
+            });
+
+            // 2. Calcul couverture w rupture
+            Object.values(besoinMP).forEach(mp => {
+                const totalBesoin = semaines.reduce((sum,s) => sum + mp.besoin[s], 0);
+                mp.conso_moy = totalBesoin / semaines.length;
+                mp.couverture = mp.conso_moy > 0? (mp.stock / mp.conso_moy) : 999;
+                const besoin4Sem = mp.conso_moy * 4;
+                mp.a_commander = Math.max(0, besoin4Sem - mp.stock + mp.stockMin);
+                mp.valeur_cmd = mp.a_commander * mp.prix;
+
+                if(mp.stock === 0 && totalBesoin > 0) mp.statut = 'RUPTURE';
+                else if(mp.couverture < 2) mp.statut = 'CRITIQUE';
+                else if(mp.couverture < 4) mp.statut = 'ALERTE';
+                else mp.statut = 'OK';
+            });
+
+            updateKPI();
+            renderAll();
+            saveData();
+            switchTab('besoin');
+
+            const ruptures = Object.values(besoinMP).filter(m => m.statut === 'RUPTURE' || m.statut === 'CRITIQUE').length;
+            showAlert(`⚡ MRP Calculé: ${Object.keys(besoinMP).length} références MP/C, ${ruptures} en rupture/critique`, ruptures > 0? 'alert' : 'success');
         }
 
-        // Init
-        renderTable();
-        updateKPI();
+        function updateKPI() {
+            const mps = Object.values(besoinMP);
+            const ruptures = mps.filter(m => parseFloat(m.couverture) < 2).length;
+            const valCmd = mps.reduce((sum,m) => sum + m.valeur_cmd, 0);
+
+            document.getElementById('kpi-semaines').innerText = semaines.length;
+            document.getElementById('kpi-pf').innerText = forecastPF.length;
+            document.getElementById('kpi-mp').innerText = mps.length;
+            document.getElementById('kpi-rupture').innerText = ruptures;
+            document.getElementById('kpi-cmd').innerText = Math.round(valCmd).toLocaleString() + ' DH';
+        }
+
+        function renderAll() {
+            updateKPI();
+            renderTable();
+        }
+
+        function renderTable() {
+            let html = '';
+            if(currentTab === 'besoin') {
+                html = `<tr><th>Réf MP/C</th><th>Désignation</th><th>Type</th><th>Stock Actuel</th><th>Conso Moy/Sem</th><th>Couverture</th><th>À Commander</th><th>Unité</th><th>Statut</th></tr>`;
+                Object.values(besoinMP).sort((a,b) => a.couverture - b.couverture).forEach(mp => {
+                    let statusClass = 'status-ok';
+                    if(mp.statut==='RUPTURE'||mp.statut==='CRITIQUE') statusClass='status-danger';
+                    else if(mp.statut==='ALERTE') statusClass='status-warning';
+
+                    html += `<tr>
+                        <td><strong>${mp.ref}</strong></td>
+                        <td>${mp.des}</td>
+                        <td>${mp.type}</td>
+                        <td><input class="stock-input" type="number" value="${mp.stock}" onchange="updateStock('${mp.ref}',this.value)"></td>
+                        <td>${mp.conso_moy.toFixed(2)}</td>
+                        <td><strong>${mp.couverture === 999? '∞' : mp.couverture.toFixed(1)} sem</strong></td>
+                        <td style="color:#dc2626;font-weight:bold">${mp.a_commander.toFixed(2)}</td>
+                        <td>${mp.unite}</td>
+                        <td><span class="status ${statusClass}">${mp.statut}</span></td>
+                    </tr>`;
+                });
+            } else if(currentTab === 'rupture') {
+                html = `<tr><th>Réf</th><th>Désignation</th>${semaines.slice(0,8).map(s=>`<th>${s}</th>`).join('')}<th>Total 8S</th><th>Stock</th><th>Manque</th><th>Statut</th></tr>`;
+                Object.values(besoinMP).filter(m=>m.statut!=='OK').sort((a,b)=>a.couverture-b.couverture).forEach(mp => {
+                    const total8 = semaines.slice(0,8).reduce((sum,s) => sum + mp.besoin[s], 0);
+                    const manque = Math.max(0, total8 - mp.stock);
+                    html += `<tr>
+                        <td><strong>${mp.ref}</strong></td>
+                        <td>${mp.des.substring(0,30)}</td>
+                        ${semaines.slice(0,8).map(s=>`<td>${mp.besoin[s].toFixed(1)}</td>`).join('')}
+                        <td><strong>${total8.toFixed(1)}</strong></td>
+                        <td>${mp.stock}</td>
+                        <td style="color:#dc2626;font-weight:bold">${manque.toFixed(1)}</td>
+                        <td><span class="status status-danger">${mp.statut}</span></td>
+                    </tr>`;
+                });
+            } else if(currentTab === 'forecast') {
+                if(forecastPF.length === 0) { html = '<tr><td>Importer Forecast PF lowel</td></tr>'; }
+                else {
+                    html = '<tr><th>PF</th>' + semaines.map(s=>`<th>${s}</th>`).join('') + '</tr>';
+                    forecastPF.slice(0,50).forEach(pf => {
+                        html += '<tr><td><strong>'+pf['Reference PF']+'</strong></td>' + semaines.map(s=>`<td>${(pf[s]||0).toFixed(0)}</td>`).join('') + '</tr>';
+                    });
+                }
+            } else if(currentTab === 'bom') {
+                html = `<tr><th>PF</th><th>Réf MP</th><th>Qté</th><th>Désignation</th><th>Type</th><th>Unité</th></tr>`;
+                bom.slice(0,100).forEach(b => {
+                    html += `<tr><td>${b['Reference ']||''}</td><td>${b['composant ']||''}</td><td>${b['Quantité']||''}</td><td>${(b['Type Composant']||'').substring(0,40)}</td><td>${b['Type ']||''}</td><td>${b['Unité']||''}</td></tr>`;
+                });
+            }
+            document.getElementById(currentTab + '-table').innerHTML = html || '<tr><td>Aucune donnée</td></tr>';
+        }
+
+        function updateStock(ref, value) {
+            if(besoinMP[ref]) {
+                besoinMP[ref].stock = parseFloat(value) || 0;
+                calculerMRP();
+            }
+        }
+
+        function exportExcel() {
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.values(besoinMP)), "Besoin_MP_C");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(forecastPF), "Forecast_PF");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(bom), "BOM");
+            XLSX.writeFile(wb, "MRP_Delta_SOMACA.xlsx");
+        }
+
+        function clearAll() {
+            if(confirm('Vider toutes les données?')) {
+                forecastPF = []; bom = []; besoinMP = {}; semaines = [];
+                localStorage.removeItem('mrpDeltaData');
+                renderAll();
+                showAlert('Données effacées', 'success');
+            }
+        }
+
+        function showAlert(msg, type) {
+            const cls = type === 'success'? 'success-box' : 'alert-box';
+            document.getElementById('alert-zone').innerHTML = `<div class="${cls}">${msg}</div>`;
+            setTimeout(() => document.getElementById('alert-zone').innerHTML = '', 5000);
+        }
+
+        renderAll();
     </script>
 </body>
 </html>
